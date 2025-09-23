@@ -30,5 +30,5 @@ Made and developed by bot910
 </p>
 
 <p align="center">
-─── ©bot910 ───
+── ©bot910 ──
 </p>
