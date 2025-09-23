@@ -28,7 +28,7 @@ Here are the features of this tracker. Enter the number corresponding to what ha
 <p align="center">
 Made and developed by bot910
 </p>
-<br>
+
 <p align="center">
 ─── ©bot910 ───
 </p>
