@@ -25,3 +25,6 @@ Here are the features of this tracker. Enter the number corresponding to what ha
     8 - Next turn: Enter the next number you rolled and receive the corresponding resources.
     9 - Input full data: Enter the full game data as a string (used to save games).
 </pre>
+<p style="text-align: center;">Made and developed by bot910</p>
+<br>
+<p style="text-align: center;">─── ©bot910 ───</p>
