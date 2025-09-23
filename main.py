@@ -208,7 +208,7 @@ def main():
                     for i in range(source_a):
                         add_source(player, int(input(f"Enter source ({i+1}/{source_a}) number (2-12): ")), int(input("Enter resource (1:wood 2:stone 3:wheet 4:sheep 5:ore 6:custom): ")))
             elif choice == 6: #add resources
-                add_resource(player, get_numbers(input("Enter resources (1-6): ")))
+                add_resource(player, get_numbers(input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")))
             elif choice == 7: #remove latest source
                 players[player]["sources"].popitem()
             elif choice == 8: #next turn
