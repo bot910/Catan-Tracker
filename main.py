@@ -272,7 +272,17 @@ def main(): #main game loop
                     continue
                 else:
                     for i in range(int(player_a)):
-                        remove_resource(input("Enter player name: "), get_numbers(input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")))
+                        player_n = input(f"Enter player name ({i+1}/{player_a}): ")
+                        if not player_n == "q" or player_n == "":
+                            try:
+                                player_n = int(player_n)
+                            except ValueError:
+                                pass
+                            if type(player_n) == int:
+                                player_n = get_player_order(player_n)
+                            res = get_numbers(input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))
+                            remove_resource(player_n, res)
+                            nextprint += f"{player_n} lost resources {res}.\n"
             
             elif choice == 5: #play action card
                 card_a = input("Enter card (1:mon,2:inv): ")
@@ -286,8 +296,9 @@ def main(): #main game loop
                         total_amount += amount_of_card_chosen
                         for i in range(amount_of_card_chosen):
                             remove_resource(name, [int(card_chosen)])
+                    total_amount -= get_amount_of_resources(player, int(card_chosen))
                     add_resource(player, [int(card_chosen)] * total_amount, dontshow=True)
-                    nextprint += f"{player} played monopoly for {num_to_resource(int(card_chosen))}, taking {total_amount} from all players.\n"
+                    nextprint += f"{player} played monopoly for {num_to_resource(int(card_chosen))}, taking {total_amount} {num_to_resource(int(card_chosen))} from all players.\n"
                     
                 elif card_a in ("2", "inv", "in", "invention"):
                     player_name = input("Enter player name: ")
