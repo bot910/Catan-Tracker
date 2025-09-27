@@ -1,6 +1,6 @@
 Catan-Tracker
 =============
-A simple irl Settlers of Catan card and player tracker. (With the seafarers expension)
+A simple irl Settlers of Catan card and player tracker. (With the seafarers expansion)
 
 <br>
 
