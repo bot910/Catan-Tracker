@@ -16,8 +16,11 @@ def clear(): #clear console
 
 def get_numbers(input: str): #get list of numbers from input
     user_input = input
-    numbers = [int(num.strip()) for num in user_input.split(",")]
-    return numbers
+    if not user_input:
+        return []
+    else:
+        numbers = [int(num.strip()) for num in user_input.split(",")]
+        return numbers
 
 def num_to_resource(num: int): #convert number to resource name
     if num == 1:
@@ -118,6 +121,9 @@ def trade(name1: str, name2: str, resource1: list, resource2: list): #trade reso
     if name1 not in players or name2 not in players:
         print("Player does not exist.")
         return
+    if resource1 == [] or resource2 == []:
+        print("No resources specified.")
+        return
     if "resources" not in players[name1] or "resources" not in players[name2]:
         print("Players have no resources.")
         return
@@ -165,6 +171,7 @@ def new_roll(p, number): #process new roll and add resources to players
 
 def main(): #main game loop
     global players
+    global nextprint
     turn = 1
     while True:
         nextturn = 0
@@ -207,35 +214,61 @@ def main(): #main game loop
 
             if choice == 1: #build
                 buildingchoice = input("Enter building (VI, CI, CA, ST, SH or 1-5): ")
-                if buildingchoice == "q":
+                if buildingchoice == "q" or buildingchoice == "":
                     continue
                 elif buildingchoice.lower() in ("vi", "1"):
-                    remove_resource(player, [1,2,3,4])
+                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q" or cost == "":
+                        cost = get_numbers(cost)
+                        nextprint += f"{player} built a village using {cost}.\n"
+                        remove_resource(player, cost)
                 elif buildingchoice.lower() in ("ci", "2"):
-                    remove_resource(player, [3,3,5,5,5])
+                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q" or cost == "":
+                        cost = get_numbers(cost)
+                        nextprint += f"{player} built a city using {cost}.\n"
+                        remove_resource(player, cost)
                 elif buildingchoice.lower() in ("ca", "3"):
-                    remove_resource(player, [3,4,5])
+                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q" or cost == "":
+                        cost = get_numbers(cost)
+                        nextprint += f"{player} bought a card using {cost}.\n"
+                        remove_resource(player, cost)
                 elif buildingchoice.lower() in ("st", "4"):
-                    remove_resource(player, [1,2])
+                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q" or cost == "":
+                        cost = get_numbers(cost)
+                        nextprint += f"{player} built a street using {cost}.\n"
+                        remove_resource(player, cost)
                 elif buildingchoice.lower() in ("sh", "5"):
-                    remove_resource(player, [1,4])
+                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q" or cost == "":
+                        cost = get_numbers(cost)
+                        nextprint += f"{player} built a ship using {cost}.\n"
+                        remove_resource(player, cost)
                 else:
-                    remove_resource(player, [buildingchoice])
+                    continue
 
             elif choice == 2: #trade
                 trade(input("Enter player 1: "), input("Enter player 2: "), get_numbers(input("Enter resources 1 (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")), get_numbers(input("Enter resources 2 (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")))
             
             elif choice == 3: #Steal
                 victim = input("Enter victim: ")
-                if victim == "q":
+                if victim == "q" or victim == "":
                     continue
                 else:
                     card = input("Enter card (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    remove_resource(victim, [card])
+                    if not card == "q" or card == "":
+                        card = int(card)
+                        if get_amount_of_resources(victim, card) == 0:
+                            continue
+                        nextprint += f"{player} stole {card}:{num_to_resource(card)} from {victim}.\n"
+                        add_resource(player, [card], dontshow=True)
+                        remove_resource(victim, [card])
             
             elif choice == 4: #split
                 player_a = input("Enter amount of players: ")
-                if player_a == "q":
+                if player_a == "q" or player_a == "":
                     continue
                 else:
                     for i in range(int(player_a)):
@@ -243,7 +276,7 @@ def main(): #main game loop
             
             elif choice == 5: #play action card
                 card_a = input("Enter card (1:mon,2:inv): ")
-                if card_a == "q":
+                if card_a == "q" or card_a == "":
                     continue
                 elif card_a in ("1", "mon", "mo", "monopoly"): 
                     card_chosen = input("Enter card (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
@@ -253,7 +286,8 @@ def main(): #main game loop
                         total_amount += amount_of_card_chosen
                         for i in range(amount_of_card_chosen):
                             remove_resource(name, [int(card_chosen)])
-                    add_resource(player, [int(card_chosen)] * total_amount)
+                    add_resource(player, [int(card_chosen)] * total_amount, dontshow=True)
+                    nextprint += f"{player} played monopoly for {num_to_resource(int(card_chosen))}, taking {total_amount} from all players.\n"
                     
                 elif card_a in ("2", "inv", "in", "invention"):
                     player_name = input("Enter player name: ")
@@ -262,16 +296,16 @@ def main(): #main game loop
             
             elif choice == 6: #add source
                 source_a = input("Enter amount of sources: ")
-                if source_a == "q":
+                if source_a == "q" or source_a == "":
                     continue
                 else:
                     source_a = int(source_a)
                     for i in range(source_a):
                         source_n = str(input(f"Enter source ({i+1}/{source_a}) number (2-12): "))
-                        if source_n == "q" or source_a == "q":
+                        if source_n == "q" or source_n == "":
                             continue
                         source_r = str(input("Enter resource (1:wood 2:stone 3:wheet 4:sheep 5:ore 6:custom): "))
-                        if source_r == "q":
+                        if source_r == "q" or source_r == "":
                             continue
                         else:
                             source_n = int(source_n)
@@ -286,7 +320,7 @@ def main(): #main game loop
             
             elif choice == 8: #next turn
                 roll = input("Enter roll (2-12): ")
-                if roll == "q":
+                if roll == "q" or roll == "":
                     continue
                 else:
                     new_roll(player, roll)
@@ -309,7 +343,7 @@ def main(): #main game loop
     2. Remove latest source
     3. Import full data (Python dict format)\n""")
                 choice_a = input("Enter choice (1-3): ").strip()
-                if choice_a == "q":
+                if choice_a == "q" or choice_a == "":
                     continue
                 elif choice_a == "1":
                     remove_resource(player, get_numbers(input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")))
@@ -320,7 +354,7 @@ def main(): #main game loop
                         players[player]["sources"].popitem()
                 elif choice_a == "3":
                     data = input("Enter full data (The data must me in the correct format):")
-                    if data == "q":
+                    if data == "q" or data == "":
                         continue
                     else:
                         try:
@@ -329,7 +363,9 @@ def main(): #main game loop
                                 print("Parsed value is not a dict.")
                             else:
                                 players = parsed
-                                print("Imported players successfully.")
+                                print("Imported data successfully.\n")
+                                print(f"Players are now: {players.keys()}")
+                                time.sleep(0.75)
                         except Exception as e:
                             print("Failed to parse input as Python literal:", e)
             
