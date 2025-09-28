@@ -6,6 +6,7 @@ import ast #ast for parsing a python dict
 import os #os for clearing console
 
 players = {}
+blocked_s = ""
 nextprint = ""
 
 def clear(): #clear console
@@ -42,6 +43,19 @@ def get_amount_of_resources(name: str, resource: int): #get amount of specific r
         return 0
     else:
         return resources.count(int(resource))
+
+def add_blocked_source(name: str, number: int, resource: int, amount: int): #add blocked source to player
+    global players
+    if resource > 0 and resource < 7 and number > 1 and number < 13 and name in players:
+        if "blocked" not in players[name]:
+            players[name]["blocked"] = []
+        players[name]["blocked"].append((number, resource, amount))
+
+def remove_all_blocked_sources(): #remove all blocked sources from players
+    global players
+    for name in players:
+        if "blocked" in players[name]:
+            del players[name]["blocked"]
 
 def add_player(name: str): #add player to game
     global players
@@ -100,7 +114,10 @@ def remove_resource(name: str, resource: list): #remove resources from player
     else:
         for r in resource:
             if r > 0 and r < 7:
-                players[name]["resources"].remove(r)
+                if r not in players[name]["resources"]:
+                    print(f"{name} does not have resource {r}. Skipping.")
+                else:
+                    players[name]["resources"].remove(r)
             else:
                 print(f"Invalid resource {r}.")
             
@@ -159,17 +176,29 @@ def new_roll(p, number): #process new roll and add resources to players
     nextprint = ""
     for name, data in players.items():
         sources = data.get("sources", {})
+        blocked = data.get("blocked", [])
         if number in sources:
-            resources_to_add = sources[number].copy()
-            add_resource(name, resources_to_add, dontshow=True)
-            names_to_add = []
-            for i in range(len(resources_to_add)):
-                names_to_add.append(num_to_resource(resources_to_add[i]))
-            nextprint = nextprint +f"Added {resources_to_add}:{names_to_add} to {name} for roll {number}\n"
-        else:
-            pass
+            resources = sources[number].copy()
+            blocked_counts = {}
+            for b in blocked:
+                b_num, b_res, b_amt = b
+                if b_num == number:
+                    blocked_counts[b_res] = blocked_counts.get(b_res, 0) + b_amt
+            unblocked_resources = []
+            res_counter = Counter(resources)
+            for res, count in res_counter.items():
+                blocked_amt = blocked_counts.get(res, 0)
+                allowed = max(0, count - blocked_amt)
+                unblocked_resources.extend([res] * allowed)
+            if unblocked_resources:
+                add_resource(name, unblocked_resources, dontshow=True)
+                names_to_add = [num_to_resource(r) for r in unblocked_resources]
+                nextprint += f"Added {unblocked_resources}:{names_to_add} to {name} for roll {number}\n"
+            else:
+                nextprint += f"No resources added to {name} for roll {number} (all sources blocked)\n"
 
 def main(): #main game loop
+    global blocked_s
     global players
     global nextprint
     turn = 1
@@ -178,6 +207,7 @@ def main(): #main game loop
         while nextturn == 0:
             clear()
             print(nextprint)
+            print(f"\nBlocked source: {blocked_s}")
             player = 0
 
             if turn == 1:
@@ -217,35 +247,50 @@ def main(): #main game loop
                 if buildingchoice == "q" or buildingchoice == "":
                     continue
                 elif buildingchoice.lower() in ("vi", "1"):
-                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    if not cost == "q" or cost == "":
-                        cost = get_numbers(cost)
-                        nextprint += f"{player} built a village using {cost}.\n"
-                        remove_resource(player, cost)
+                    cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q":
+                        if cost == "":
+                            cost_t = [1,2,3,4]
+                        else:
+                            cost_t = get_numbers(cost)
+                        nextprint += f"{player} built a village using {cost_t}.\n"
+                        remove_resource(player, cost_t)
                 elif buildingchoice.lower() in ("ci", "2"):
-                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    if not cost == "q" or cost == "":
-                        cost = get_numbers(cost)
-                        nextprint += f"{player} built a city using {cost}.\n"
-                        remove_resource(player, cost)
+                    cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q":
+                        if cost == "":
+                            cost_t = [3,3,5,5,5]
+                        else:
+                            cost_t = get_numbers(cost)
+                        nextprint += f"{player} built a city using {cost_t}.\n"
+                        remove_resource(player, cost_t)
                 elif buildingchoice.lower() in ("ca", "3"):
-                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    if not cost == "q" or cost == "":
-                        cost = get_numbers(cost)
-                        nextprint += f"{player} bought a card using {cost}.\n"
-                        remove_resource(player, cost)
+                    cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q":
+                        if cost == "":
+                            cost_t = [3,4,5]
+                        else:
+                            cost_t = get_numbers(cost)
+                        nextprint += f"{player} bought a card using {cost_t}.\n"
+                        remove_resource(player, cost_t)
                 elif buildingchoice.lower() in ("st", "4"):
-                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    if not cost == "q" or cost == "":
-                        cost = get_numbers(cost)
-                        nextprint += f"{player} built a street using {cost}.\n"
-                        remove_resource(player, cost)
+                    cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q":
+                        if cost == "":
+                            cost_t = [1,2]
+                        else:
+                            cost_t = get_numbers(cost)
+                        nextprint += f"{player} built a street using {cost_t}.\n"
+                        remove_resource(player, cost_t)
                 elif buildingchoice.lower() in ("sh", "5"):
-                    cost = input("Chooste resources to use (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
-                    if not cost == "q" or cost == "":
-                        cost = get_numbers(cost)
-                        nextprint += f"{player} built a ship using {cost}.\n"
-                        remove_resource(player, cost)
+                    cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
+                    if not cost == "q":
+                        if cost == "":
+                            cost_t = [1,4]
+                        else:
+                            cost_t = get_numbers(cost)
+                        nextprint += f"{player} built a ship using {cost_t}.\n"
+                        remove_resource(player, cost_t)
                 else:
                     continue
 
@@ -352,8 +397,12 @@ def main(): #main game loop
                 print("""\nAdvanced options:
     1. Remove resources
     2. Remove latest source
-    3. Import full data (Python dict format)\n""")
-                choice_a = input("Enter choice (1-3): ").strip()
+    3. Import full data (Python dict format)
+    4. Switch player (without rolling) 
+    5. Set the current blocked source for players (by the bandit)\n""")
+                print("Debug (full list of players and data):")
+                print(players)
+                choice_a = input("\nEnter choice (1-4): ").strip()
                 if choice_a == "q" or choice_a == "":
                     continue
                 elif choice_a == "1":
@@ -380,6 +429,55 @@ def main(): #main game loop
                         except Exception as e:
                             print("Failed to parse input as Python literal:", e)
             
+                elif choice_a == "4":
+                    choice_p = input("Enter the amount of turns to advance: ")
+                    if choice_p == "q" or choice_p == "":
+                        continue
+                    else:
+                        try:
+                            choice_p = int(choice_p)
+                            if choice_p < 1:
+                                print("Invalid amount of turns.")
+                            else:
+                                turn += choice_p
+                                nextturn = 1
+                        except ValueError:
+                            print("Invalid input.")
+                elif choice_a == "5":
+                    blocked_r = input("Enter blocked source and resource (1-12:1-6): ")
+                    blocked_s = blocked_r
+                    if blocked_r == "q":
+                        continue
+                    elif blocked_r == "":
+                        remove_all_blocked_sources()
+                        nextprint += "Removed all blocked source.\n"
+                    else:
+                        remove_all_blocked_sources()
+                        blocked_r = blocked_r.split(":")
+                        blocked_rs = blocked_r[0]
+                        blocked_r = blocked_r[1]
+                        blocked_a = input("Enter amount of players: ")
+                        if blocked_a == "q" or blocked_a == "":
+                            continue
+                        else:
+                            for i in range(int(blocked_a)):
+                                blocked_n = input(f"Enter player name or number ({i+1}/{blocked_a}) and amount of sources to block (name:amount): ")
+                                if blocked_n == "q" or blocked_n == "":
+                                    continue
+                                else:
+                                    blocked_n = blocked_n.split(":")
+                                    blocked_ns = blocked_n[0]
+                                    blocked_na = int(blocked_n[1])
+                                    try:
+                                        blocked_ns = int(blocked_ns)
+                                    except ValueError:
+                                        pass
+                                    if type(blocked_ns) == int:
+                                        blocked_ns = get_player_order(blocked_ns)
+                                    add_blocked_source(blocked_ns, int(blocked_rs), int(blocked_r), blocked_na)
+                        nextprint += f"Set blocked source {blocked_rs}:{num_to_resource(int(blocked_r))} for {blocked_a} players.\n"
+
+                    
             else:
                 print("Invalid choice. Please try again.")
             
