@@ -15,15 +15,15 @@ python3 main.py
 <h2>Features:</h2>
 <pre>
 Here are the features of this tracker. Enter the number corresponding to what happens in the game:
-    1 - Build: Choose one of the buildings in the game (village, city, card, street, or ship — if you play with the Seafarers expansion) and remove the required resources.
+    1 - Build: Choose one of the buildings (village, city, card, street, or ship) to build and remove the required resources.
     2 - Trade: Trade resources between two players.
-    3 - Steal: Steal a card from a player.
+    3 - Steal: Steal a card from a player and set the blocked tile (if quick options is enabled).
     4 - Split: Remove a number of cards from a player.
     5 - Add source: Add a settlement that gives you cards when its number is rolled.
     6 - Add resources: Add a number of resources to a player.
     7 - Remove latest source: Remove the most recently added source for the current player (used if you entered it incorrectly).
     8 - Next turn: Enter the next number you rolled and receive the corresponding resources.
-    9 - Input full data: Enter the full game data as a string (used to save games).
+    9 - More options.
 </pre>
 <p align="center">
 Made and developed by bot910
