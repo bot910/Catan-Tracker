@@ -6,6 +6,8 @@ import ast #ast for parsing a python dict
 import os #os for clearing console
 
 players = {}
+sea = False
+autobuild = True
 blocked_s = ""
 nextprint = ""
 
@@ -13,7 +15,7 @@ def clear(): #clear console
     if sys.platform.startswith("win"):
         os.system("cls")
     else:
-        os.system("clear")
+        os.system("clear") 
 
 def get_numbers(input: str): #get list of numbers from input
     user_input = input
@@ -146,12 +148,10 @@ def trade(name1: str, name2: str, resource1: list, resource2: list): #trade reso
         return
     for r in resource1:
         if r not in players[name1]["resources"]:
-            print(f"{name1} does not have resource {r}. Trade canceled.")
-            return
+            print(f"{name1} does not have resource {r}. Skipped over resource.")
     for r in resource2:
         if r not in players[name2]["resources"]:
-            print(f"{name2} does not have resource {r}. Trade canceled.")
-            return
+            print(f"{name2} does not have resource {r}. Skipped over resource.")
     nextprint += f"Traded {resource1} from {name1} to {name2} for {resource2}\n"
     add_resource(name1, resource2, dontshow=True)
     remove_resource(name2, resource2)
@@ -168,6 +168,27 @@ def add_source(name: str, number: Literal[2,3,4,5,6,7,8,9,10,11,12], resource: L
             players[name]["sources"][number] = []
 
         players[name]["sources"][number].append(resource)
+
+def source_ask(player: str): #ask player for source to add
+    source_a = input("Enter amount of sources: ")
+    if source_a == "q" or source_a == "":
+        pass
+    else:
+        source_a = int(source_a)
+        for i in range(source_a):
+            source_n = str(input(f"Enter source ({i+1}/{source_a}) number (2-12): "))
+            if source_n == "q" or source_n == "":
+                continue
+            source_r = str(input("Enter resource (1:wood 2:stone 3:wheet 4:sheep 5:ore 6:custom): "))
+            if source_r == "q" or source_r == "":
+                continue
+            else:
+                source_n = int(source_n)
+                for i in range(len(source_r)):
+                    if source_r[i] == ",":
+                        pass
+                    else:
+                        add_source(player, source_n, int(source_r[i]))
 
 def new_roll(p, number): #process new roll and add resources to players
     global players
@@ -202,7 +223,7 @@ def main(): #main game loop
     global players
     global nextprint
     turn = 1
-    while True:
+    while True: #a turn
         nextturn = 0
         while nextturn == 0:
             clear()
@@ -221,10 +242,10 @@ def main(): #main game loop
                 print(format_resources(name, get_player_resources(name)))
 
             print("""\nChoose an option: 
-    1 - Build
+    1 - Build (Possibly add sources)
     2 - Trade
-    3 - Steal
-    4 - Split
+    3 - Steal (with bandit)
+    4 - Remove resources
     5 - Play action card
     6 - Add source
     7 - Add resources
@@ -243,10 +264,13 @@ def main(): #main game loop
                 continue
 
             if choice == 1: #build
-                buildingchoice = input("Enter building (VI, CI, CA, ST, SH or 1-5): ")
+                if sea:
+                    buildingchoice = input("Enter building (VI, CI, CA, ST, SH or 1-5): ")
+                elif sea == False:
+                    buildingchoice = input("Enter building (VI, CI, CA, ST or 1-4): ")
                 if buildingchoice == "q" or buildingchoice == "":
                     continue
-                elif buildingchoice.lower() in ("vi", "1"):
+                elif buildingchoice.lower() in ("vi", "1", "village"):
                     cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
                     if not cost == "q":
                         if cost == "":
@@ -255,7 +279,10 @@ def main(): #main game loop
                             cost_t = get_numbers(cost)
                         nextprint += f"{player} built a village using {cost_t}.\n"
                         remove_resource(player, cost_t)
-                elif buildingchoice.lower() in ("ci", "2"):
+                        if autobuild:
+                            source_ask(player)
+
+                elif buildingchoice.lower() in ("ci", "2", "city"):
                     cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
                     if not cost == "q":
                         if cost == "":
@@ -264,7 +291,9 @@ def main(): #main game loop
                             cost_t = get_numbers(cost)
                         nextprint += f"{player} built a city using {cost_t}.\n"
                         remove_resource(player, cost_t)
-                elif buildingchoice.lower() in ("ca", "3"):
+                        if autobuild:
+                            source_ask(player)
+                elif buildingchoice.lower() in ("ca", "3", "card"):
                     cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
                     if not cost == "q":
                         if cost == "":
@@ -273,7 +302,8 @@ def main(): #main game loop
                             cost_t = get_numbers(cost)
                         nextprint += f"{player} bought a card using {cost_t}.\n"
                         remove_resource(player, cost_t)
-                elif buildingchoice.lower() in ("st", "4"):
+
+                elif buildingchoice.lower() in ("st", "4", "street"):
                     cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
                     if not cost == "q":
                         if cost == "":
@@ -282,7 +312,8 @@ def main(): #main game loop
                             cost_t = get_numbers(cost)
                         nextprint += f"{player} built a street using {cost_t}.\n"
                         remove_resource(player, cost_t)
-                elif buildingchoice.lower() in ("sh", "5"):
+
+                elif buildingchoice.lower() in ("sh", "5", "ship") and sea:
                     cost = input("Chooste resources to use, leave blank to use default (1:wood 2:stone 3:wheet 4:sheep 5:ore): ")
                     if not cost == "q":
                         if cost == "":
@@ -291,6 +322,7 @@ def main(): #main game loop
                             cost_t = get_numbers(cost)
                         nextprint += f"{player} built a ship using {cost_t}.\n"
                         remove_resource(player, cost_t)
+
                 else:
                     continue
 
@@ -310,8 +342,42 @@ def main(): #main game loop
                         nextprint += f"{player} stole {card}:{num_to_resource(card)} from {victim}.\n"
                         add_resource(player, [card], dontshow=True)
                         remove_resource(victim, [card])
-            
-            elif choice == 4: #split
+                    doblocking = input("Block a source? (y/n): ")
+                    if doblocking.lower() == "y" or doblocking.lower() == "yes":
+                        blocked_r = input("Enter blocked source and resource (1-12:1-6): ")
+                    blocked_s = blocked_r
+                    if blocked_r == "q":
+                        continue
+                    elif blocked_r == "":
+                        remove_all_blocked_sources()
+                        nextprint += "Removed all blocked source.\n"
+                    else:
+                        remove_all_blocked_sources()
+                        blocked_r = blocked_r.split(":")
+                        blocked_rs = blocked_r[0]
+                        blocked_r = blocked_r[1]
+                        blocked_a = input("Enter amount of players: ")
+                        if blocked_a == "q" or blocked_a == "":
+                            continue
+                        else:
+                            for i in range(int(blocked_a)):
+                                blocked_n = input(f"Enter player name or number ({i+1}/{blocked_a}) and amount of sources to block (name:amount): ")
+                                if blocked_n == "q" or blocked_n == "":
+                                    continue
+                                else:
+                                    blocked_n = blocked_n.split(":")
+                                    blocked_ns = blocked_n[0]
+                                    blocked_na = int(blocked_n[1])
+                                    try:
+                                        blocked_ns = int(blocked_ns)
+                                    except ValueError:
+                                        pass
+                                    if type(blocked_ns) == int:
+                                        blocked_ns = get_player_order(blocked_ns)
+                                    add_blocked_source(blocked_ns, int(blocked_rs), int(blocked_r), blocked_na)
+                        nextprint += f"Set blocked source {blocked_rs}:{num_to_resource(int(blocked_r))} for {blocked_a} players.\n"
+                        
+            elif choice == 4: #remove resources
                 player_a = input("Enter amount of players: ")
                 if player_a == "q" or player_a == "":
                     continue
@@ -325,7 +391,7 @@ def main(): #main game loop
                                 pass
                             if type(player_n) == int:
                                 player_n = get_player_order(player_n)
-                            res = get_numbers(input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))
+                            res = get_numbers(input("Enter resources to remove (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))
                             remove_resource(player_n, res)
                             nextprint += f"{player_n} lost resources {res}.\n"
             
@@ -347,8 +413,8 @@ def main(): #main game loop
                     
                 elif card_a in ("2", "inv", "in", "invention"):
                     player_name = input("Enter player name: ")
-                    add_resource(player_name, input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))
-                    add_resource(player_name, input("Enter resources (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))
+                    add_resource(player_name, [int(input("Enter resources (1/2) (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))])
+                    add_resource(player_name, [int(input("Enter resources (1/2) (1:wood 2:stone 3:wheet 4:sheep 5:ore): "))])
             
             elif choice == 6: #add source
                 source_a = input("Enter amount of sources: ")
@@ -383,7 +449,7 @@ def main(): #main game loop
                     turn += 1
                     nextturn = 1
 
-            elif choice == 9: #input custom data
+            elif choice == 9: #extra options
                 clear()
                 if turn == 1:
                     player = get_player_order(1)
@@ -415,7 +481,7 @@ def main(): #main game loop
                 elif choice_a == "3":
                     data = input("Enter full data (The data must me in the correct format):")
                     if data == "q" or data == "":
-                        continue
+                        continue 
                     else:
                         try:
                             parsed = ast.literal_eval(data)
@@ -486,9 +552,25 @@ def main(): #main game loop
 def init_game(): #initialize game and players
     print("""╔═╗╔═╗╔╦╗╔═╗╔╗╔  ┌┬┐┬─┐┌─┐┌─┐┬┌─┌─┐┬─┐  
 ║  ╠═╣ ║ ╠═╣║║║   │ ├┬┘├─┤│  ├┴┐├┤ ├┬┘  
-╚═╝╩ ╩ ╩ ╩ ╩╝╚╝   ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴└─  V3.0
+╚═╝╩ ╩ ╩ ╩ ╩╝╚╝   ┴ ┴└─┴ ┴└─┘┴ ┴└─┘┴└─  V4.0
 ──────────────────────────────────────
-A simple irl Settlers of Catan card and player tracker. (With the seafarers gold resource)\n""")
+A simple Settlers of Catan board game card and player tracker. (With support for the seafarers extension)\n""")
+    sea_i = input("Use the seafarers extension? (y/n): ")
+    sea = False
+    if sea_i == "n":
+        sea = False
+    elif sea_i == "y":
+        sea = True
+    else:
+        raise(ValueError(f"Incorrect value: {sea_i}"))
+    autobuild_i = input("Use quick options (recomended for regular play) (y/n): ")
+    if autobuild_i == "n":
+        autobuild = False
+    elif autobuild_i == "y":
+        autobuild = True
+    else:
+        raise(ValueError(f"Incorrect value: {autobuild_i}"))
+    
     amount_of_players = int(input("Enter the amount of players: "))
     for i in range(amount_of_players):
         name = input(f"Enter player name ({i+1}/{amount_of_players}): ")
